@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School Store & Clubs Lab · Grade 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .lab { max-width: 1480px; margin: 0 auto; padding: 16px 16px 40px; display: grid; gap: 14px; position: relative; z-index: 2; }
+  .lab h1 { font-size: clamp(34px, 4.6vw, 60px); margin: 0; }
+  .lede2 { font: 700 clamp(15px, 1.7vw, 19px)/1.4 'Nunito', sans-serif; color: #4a5078; margin: 4px 0 0; max-width: 1100px; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+  @media (max-width: 1100px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  .side { display: grid; gap: 12px; }
+  .box { background: #fff; border-radius: 20px; padding: 14px 16px; box-shadow: 0 6px 0 #e1e7f6; }
+  .box h3 { margin: 0 0 8px; font: 900 13px 'Nunito', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #5B5BF0; }
+  .big { font: 800 46px/1 'Baloo 2', sans-serif; color: #5B5BF0; }
+  .bar { height: 14px; border-radius: 99px; background: #eef0fb; overflow: hidden; margin-top: 8px; }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #12B886, #5B5BF0); border-radius: 99px; transition: width .5s; }
+  .sc { display: flex; gap: 10px; align-items: flex-start; font: 800 14px/1.3 'Nunito', sans-serif; color: #7a80a6; margin: 7px 0; }
+  .sc i { flex: none; width: 24px; height: 24px; border-radius: 8px; background: #e7e9f5; color: #fff; display: grid; place-items: center; font-style: normal; font-size: 13px; transition: .3s; }
+  .sc.on { color: #1B1F3B; } .sc.on i { background: #16a34a; transform: scale(1.1); }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tools button { border: 0; border-radius: 12px; padding: 10px 14px; font: 800 15px 'Nunito', sans-serif; cursor: pointer; color: #fff; background: #5B5BF0; box-shadow: 0 4px 0 #3b3bc0; }
+  .tools button.g { background: #fff; color: #1B1F3B; box-shadow: 0 4px 0 #dfe3f2; }
+  .nm { width: 100%; font: 700 16px 'Nunito', sans-serif; padding: 9px 12px; border-radius: 12px; border: 3px solid #d5e2fb; }
+  .cert { display: none; margin-top: 10px; border-radius: 16px; padding: 14px; text-align: center; background: linear-gradient(135deg, #fff7e0, #e8fbf3); border: 4px dashed #FFB020; }
+  .cert.show { display: block; animation: pop .5s both; }
+  .cert b { display: block; font: 800 26px 'Baloo 2', sans-serif; color: #1B1F3B; }
+  .cert span { font: 700 14px 'Nunito', sans-serif; color: #4a5078; }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="floaters" id="floaters" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="lab">
+  <div>
+    <span class="pill">Grade 10 · Unit 4 · Week 10 · Session 2</span>
+    <h1 class="title wave"><span class="c1">S</span><span class="c2">c</span><span class="c3">h</span><span class="c4">o</span><span class="c5">o</span><span class="c1">l</span> <span class="c2">S</span><span class="c3">t</span><span class="c4">o</span><span class="c5">r</span><span class="c1">e</span> <span class="c2">&</span> <span class="c3">C</span><span class="c4">l</span><span class="c5">u</span><span class="c1">b</span><span class="c2">s</span> <span class="c3">L</span><span class="c4">a</span><span class="c5">b</span></h1>
+    <p class="lede2">Write real Python: open a <b>school store</b> with a dictionary of prices, edit it, add up a cart, then sort out the <b>clubs</b> with sets: remove duplicates and find who is in both clubs.</p>
+  </div>
+  <div class="grid">
+    <div id="sim"></div>
+    <div class="side">
+      <div class="box"><h3>Your progress</h3><div class="big" id="pct">0%</div><div class="bar"><i id="bar"></i></div></div>
+      <div class="box"><h3>🏆 Success check</h3><div id="sc"></div></div>
+      <div class="box"><h3>🎓 Lab certificate</h3><input class="nm" id="nm" placeholder="Type your name" maxlength="40"><div class="cert" id="cert"><div style="font-size:40px">🏆</div><b id="certN"></b><span>completed the School Store & Clubs Lab<br><span id="certD"></span></span><div style="margin-top:6px;font:800 13px Nunito;color:#8a5b00">📸 Show this to your teacher!</div></div></div>
+      <div class="box"><h3>Tools</h3><div class="tools"><button id="demo">▶ Show me everything</button><button class="g" id="reset">↺ Start again</button></div></div>
+    </div>
+  </div>
+</div>
+<script src="fx.js"></script>
+<script src="lab.js"></script>
+<script>
+  floaters(["🛒", "🎟️", "{ }", "🔑", "&", "|", "🐍", "✨"]);
+  let lab, celebrated = false;
+  const nm = document.getElementById('nm');
+  try { nm.value = localStorage.getItem('g10w10s2-lab-name') || ''; } catch (e) { }
+  const paint = () => {
+    const t = lab.tasks(), d = t.filter((x) => x[1]).length, p = Math.round(d / t.length * 100);
+    document.getElementById('pct').textContent = p + '%'; document.getElementById('bar').style.width = p + '%';
+    document.getElementById('sc').innerHTML = t.map(([n, ok]) => `<div class="sc ${ok ? 'on' : ''}"><i>✓</i>${n}</div>`).join('');
+    const c = document.getElementById('cert'); const full = p === 100;
+    document.getElementById('certN').textContent = nm.value.trim() || 'You';
+    document.getElementById('certD').textContent = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    c.classList.toggle('show', full);
+    if (full && !celebrated) { celebrated = true; try { confetti(160); } catch (e) { } }
+  };
+  nm.addEventListener('input', () => { try { localStorage.setItem('g10w10s2-lab-name', nm.value); } catch (e) { } paint(); });
+  lab = mountLab(document.getElementById('sim'), Object.assign({ fs: 'clamp(13px, 1.25vw, 17px)', height: 'min(80vh, 760px)' }, window.LAB_OPTS || {}, { onChange: () => setTimeout(paint) }));
+  paint();
+  document.getElementById('demo').onclick = () => { lab.reset(); lab.demo(); };
+  document.getElementById('reset').onclick = () => { if (confirm('Start the lab again from the beginning?')) { lab.reset(); celebrated = false; paint(); } };
+</script>
+</body>
+</html>
