@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab Results · School Store & Clubs Lab · Grade 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .rs { max-width: 1400px; margin: 0 auto; padding: 18px 18px 40px; display: grid; gap: 14px; position: relative; z-index: 2; }
+  .rs h1 { margin: 0; font-size: clamp(32px, 4.4vw, 54px); }
+  .top { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; justify-content: space-between; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 800px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .st { background: #fff; border-radius: 20px; padding: 14px 18px; box-shadow: 0 6px 0 #e1e7f6; }
+  .st b { display: block; font: 800 42px/1 'Baloo 2', sans-serif; color: #5B5BF0; }
+  .st span { font: 900 12px 'Nunito', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #7a80a6; }
+  .bar2 { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; background: #fff; border-radius: 18px; padding: 10px 14px; box-shadow: 0 6px 0 #e1e7f6; }
+  .bar2 select, .bar2 input { font: 800 15px 'Nunito', sans-serif; padding: 8px 10px; border-radius: 12px; border: 3px solid #d5e2fb; }
+  .bar2 button { border: 0; border-radius: 12px; padding: 10px 14px; font: 800 15px 'Nunito', sans-serif; cursor: pointer; color: #fff; background: #5B5BF0; box-shadow: 0 4px 0 #3b3bc0; }
+  .bar2 button.g { background: #12B886; box-shadow: 0 4px 0 #0b8a62; }
+  .bar2 button.r { background: #fff; color: #c92a2a; box-shadow: 0 4px 0 #f1d4d4; }
+  .bar2 .sp { flex: 1; }
+  .tw { background: #fff; border-radius: 20px; box-shadow: 0 6px 0 #e1e7f6; overflow: auto; }
+  table { width: 100%; border-collapse: collapse; font: 700 15px 'Nunito', sans-serif; }
+  th { position: sticky; top: 0; background: #f4f6ff; text-align: left; padding: 10px 12px; font: 900 12px 'Nunito', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #6b7096; cursor: pointer; white-space: nowrap; }
+  td { padding: 9px 12px; border-top: 2px solid #f0f2fa; white-space: nowrap; }
+  td.nm { font-weight: 900; color: #1B1F3B; }
+  .pb { width: 150px; height: 12px; border-radius: 99px; background: #eef0fb; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 8px; }
+  .pb i { display: block; height: 100%; background: linear-gradient(90deg, #12B886, #5B5BF0); }
+  .dots span { display: inline-block; width: 18px; height: 18px; border-radius: 6px; margin-right: 3px; background: #e7e9f5; vertical-align: middle; }
+  .dots span.y { background: #16a34a; }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font: 900 12px 'Nunito', sans-serif; }
+  .tag.done { background: #dcf7ec; color: #0b6b4c; } .tag.work { background: #fff2d6; color: #8a5b00; } .tag.idle { background: #eef0fb; color: #6b7096; }
+  .help { color: #8a5b00; }
+  .empty { padding: 40px; text-align: center; font: 800 18px 'Nunito', sans-serif; color: #7a80a6; }
+  .note { font: 700 14px/1.45 'Nunito', sans-serif; color: #4a5078; }
+  .conn { font: 800 13px 'Nunito', sans-serif; }
+  .conn.ok { color: #0b8a62; } .conn.bad { color: #c92a2a; }
+</style>
+</head>
+<body>
+<div class="floaters" id="floaters" aria-hidden="true"></div>
+<div class="rs">
+  <div class="top">
+    <div><span class="pill">Teacher only · Grade 10 · Week 10 · Session 2</span>
+      <h1 class="title"><span class="c4">Lab</span> <span class="c1">Results</span></h1>
+      <div class="note">School Store & Clubs Lab · updates live as students work · <span class="conn" id="conn">connecting…</span></div></div>
+    <div class="note" style="text-align:right">Student link: <b id="link"></b></div>
+  </div>
+  <div class="stats">
+    <div class="st"><b id="sN">0</b><span>Students</span></div>
+    <div class="st"><b id="sF">0</b><span>Certificates</span></div>
+    <div class="st"><b id="sA">0%</b><span>Average progress</span></div>
+    <div class="st"><b id="sW">0</b><span>Active now (5 min)</span></div>
+  </div>
+  <div class="bar2">
+    <label class="note">Group <select id="rnd"></select></label>
+    <label class="note">Class <select id="cls"><option value="">All</option></select></label>
+    <input id="q" placeholder="Search name…">
+    <span class="sp"></span>
+    <button class="g" id="csv">⬇ Download CSV (Excel)</button>
+    <button class="r" id="newr">New class group</button>
+  </div>
+  <div class="tw"><table><thead><tr>
+    <th data-k="i">#</th><th data-k="name">Name</th><th data-k="cls">Class</th><th data-k="best">Progress</th><th data-k="m">Missions</th><th data-k="st">Status</th><th data-k="helps">Show me used</th><th data-k="startedAt">Started</th><th data-k="updatedAt">Last active</th><th data-k="finishedAt">Certificate</th>
+  </tr></thead><tbody id="tb"></tbody></table><div class="empty" id="empty">No students yet. Share the lab link: they type their name and class, and appear here.</div></div>
+  <div class="note">“Show me used” counts how many times a student pressed a <b>Show me</b> demo (Show me everything counts as 5), so you can tell independent work from guided work. “New class group” starts an empty list for your next class. Earlier groups stay saved and can be opened from <b>Group</b>.</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="config.js"></script>
+<script src="live.js"></script>
+<script src="fx.js"></script>
+<script>
+  floaters(['📊', '🎓', '🛒', '🔑', '✅', '🏆']);
+  const $ = (id) => document.getElementById(id), GAME = 'lab';
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const site = (window.SITE_URL || '').replace(/\/?$/, '/');
+  $('link').textContent = (location.protocol.startsWith('http') ? location.href.replace(/results\.html.*$/, '') : site) + 'lab.html';
+  let state = {}, view = null, rows = [], off = null, sortK = 'best', sortD = -1;
+  const t = (ms) => ms ? new Date(ms).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  const status = (r) => r.best >= 100 ? 'done' : (Date.now() - (r.updatedAt || 0) < 5 * 60e3 ? 'work' : 'idle');
+  const label = { done: '🎓 Certificate', work: '✏️ Working', idle: '⏸ Not active' };
+  function render() {
+    const cf = $('cls').value, q = $('q').value.trim().toLowerCase();
+    const classes = [...new Set(rows.map((r) => r.cls))].sort();
+    $('cls').innerHTML = '<option value="">All</option>' + classes.map((c) => `<option ${c === cf ? 'selected' : ''}>${esc(c)}</option>`).join('');
+    let R = rows.filter((r) => (!cf || r.cls === cf) && (!q || (r.name || '').toLowerCase().includes(q)));
+    R.forEach((r) => r.st = status(r));
+    R.sort((a, b) => { const x = a[sortK] ?? '', y = b[sortK] ?? ''; return (x > y ? 1 : x < y ? -1 : 0) * sortD || (a.name > b.name ? 1 : -1); });
+    const M = state.missions || [];
+    $('tb').innerHTML = R.map((r, i) => `<tr><td>${i + 1}</td><td class="nm">${esc(r.name)}</td><td>${esc(r.cls)}</td>
+      <td><span class="pb"><i style="width:${r.best || 0}%"></i></span><b>${r.best || 0}%</b>${(r.pct ?? r.best) < (r.best || 0) ? ` <span class="note">(now ${r.pct}%)</span>` : ''}</td>
+      <td class="dots">${String(r.m || '').split('').map((c, k) => `<span class="${c === '1' ? 'y' : ''}" title="${esc(M[k] || 'Mission ' + (k + 1))}"></span>`).join('')} ${r.done || 0}/${r.total || M.length || 6}</td>
+      <td><span class="tag ${r.st}">${label[r.st]}</span></td><td class="${r.helps ? 'help' : ''}">${r.helps || 0}</td>
+      <td>${t(r.startedAt)}</td><td>${t(r.updatedAt)}</td><td>${r.finishedAt ? '🎓 ' + t(r.finishedAt) : ''}</td></tr>`).join('');
+    $('empty').style.display = R.length ? 'none' : 'block';
+    $('sN').textContent = R.length; $('sF').textContent = R.filter((r) => r.best >= 100).length;
+    $('sA').textContent = (R.length ? Math.round(R.reduce((s, r) => s + (r.best || 0), 0) / R.length) : 0) + '%';
+    $('sW').textContent = R.filter((r) => r.st === 'work').length;
+  }
+  function watch(rnd) {
+    if (off) off(); view = rnd;
+    const ref = LIVE.playersRef(GAME, rnd);
+    const cb = ref.on('value', (s) => { const v = s.val() || {}; rows = Object.entries(v).map(([id, r]) => Object.assign({ id }, r)); render(); });
+    off = () => ref.off('value', cb);
+  }
+  function fillRounds() {
+    const cur = state.round || 1;
+    $('rnd').innerHTML = Array.from({ length: cur }, (_, i) => cur - i).map((n) => `<option value="${n}" ${n === view ? 'selected' : ''}>${n === cur ? 'Current group (' + n + ')' : 'Group ' + n}</option>`).join('');
+  }
+  if (!LIVE.on) { $('conn').className = 'conn bad'; $('conn').textContent = '⚠️ ' + (LIVE.error || 'Firebase is not set up in config.js'); }
+  else {
+    LIVE.stateRef(GAME).on('value', (s) => { const old = state.round; state = s.val() || {}; $('conn').className = 'conn ok'; $('conn').textContent = '● live';
+      if (view == null || view === old) watch(state.round || 1); fillRounds(); render(); },
+      (e) => { $('conn').className = 'conn bad'; $('conn').textContent = '⚠️ ' + e.message; });
+    $('rnd').onchange = () => watch(+$('rnd').value);
+  }
+  $('cls').onchange = render; $('q').oninput = render;
+  document.querySelectorAll('th[data-k]').forEach((th) => th.onclick = () => { const k = th.dataset.k; if (sortK === k) sortD = -sortD; else { sortK = k; sortD = k === 'name' || k === 'cls' ? 1 : -1; } render(); });
+  setInterval(render, 30e3);
+  $('csv').onclick = () => {
+    const M = state.missions || [], cf = $('cls').value;
+    const R = rows.filter((r) => !cf || r.cls === cf).sort((a, b) => (a.cls + a.name > b.cls + b.name ? 1 : -1));
+    const head = ['Name', 'Class', 'Best progress %', 'Current progress %', 'Missions done', ...M.map((m, i) => 'M' + (i + 1) + ': ' + m), 'Show me used', 'Certificate', 'Started', 'Last active', 'Certificate time'];
+    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const lines = [head.map(q).join(',')].concat(R.map((r) => [r.name, r.cls, r.best || 0, r.pct ?? '', `${r.done || 0}/${r.total || M.length}`, ...M.map((_, i) => String(r.m || '')[i] === '1' ? 'Yes' : 'No'), r.helps || 0, r.best >= 100 ? 'Yes' : 'No', t(r.startedAt), t(r.updatedAt), t(r.finishedAt)].map(q).join(',')));
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `G10W10S2_School_Store_Clubs_Lab_group${view || 1}${cf ? '_' + cf : ''}.csv`; a.click();
+  };
+  let armed = false;
+  $('newr').onclick = () => {
+    if (!LIVE.on) return;
+    if (!armed) { armed = true; $('newr').textContent = 'Click again to confirm'; setTimeout(() => { armed = false; $('newr').textContent = 'New class group'; }, 4000); return; }
+    armed = false; $('newr').textContent = 'New class group';
+    const next = (state.round || 1) + 1; view = null; LIVE.stateRef(GAME).update({ round: next });
+  };
+</script>
+</body>
+</html>

@@ -31,6 +31,21 @@
   .cert.show { display: block; animation: pop .5s both; }
   .cert b { display: block; font: 800 26px 'Baloo 2', sans-serif; color: #1B1F3B; }
   .cert span { font: 700 14px 'Nunito', sans-serif; color: #4a5078; }
+  .gate { position: fixed; inset: 0; z-index: 50; background: rgba(20,24,58,.55); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; }
+  .gate.hide { display: none; }
+  .gcard { background: #fff; border-radius: 26px; padding: 26px 28px; width: min(520px, 100%); box-shadow: 0 14px 0 rgba(0,0,0,.12); display: grid; gap: 12px; }
+  .gcard h2 { margin: 0; font: 800 34px/1.1 'Baloo 2', sans-serif; color: #5B5BF0; }
+  .gcard p { margin: 0; font: 700 15px/1.4 'Nunito', sans-serif; color: #4a5078; }
+  .gcard label { font: 900 12px 'Nunito', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #6b7096; }
+  .gcard input { width: 100%; font: 800 20px 'Nunito', sans-serif; padding: 11px 14px; border-radius: 14px; border: 3px solid #d5e2fb; }
+  .gcard input:focus { outline: none; border-color: #5B5BF0; }
+  .gcard button { border: 0; border-radius: 16px; padding: 14px; font: 800 20px 'Nunito', sans-serif; color: #fff; background: #12B886; box-shadow: 0 5px 0 #0b8a62; cursor: pointer; }
+  .gcard .err { color: #c92a2a; font: 800 14px 'Nunito', sans-serif; min-height: 1em; }
+  .who { font: 800 18px 'Nunito', sans-serif; color: #1B1F3B; }
+  .who small { display: block; font: 700 13px 'Nunito', sans-serif; color: #7a80a6; margin-top: 2px; }
+  .who a { font: 800 13px 'Nunito', sans-serif; color: #5B5BF0; cursor: pointer; text-decoration: underline; }
+  .sync { font: 800 12px 'Nunito', sans-serif; margin-top: 6px; color: #7a80a6; }
+  .sync.ok { color: #0b8a62; } .sync.bad { color: #c92a2a; }
   @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
 </style>
 </head>
@@ -48,33 +63,90 @@
     <div class="side">
       <div class="box"><h3>Your progress</h3><div class="big" id="pct">0%</div><div class="bar"><i id="bar"></i></div></div>
       <div class="box"><h3>🏆 Success check</h3><div id="sc"></div></div>
-      <div class="box"><h3>🎓 Lab certificate</h3><input class="nm" id="nm" placeholder="Type your name" maxlength="40"><div class="cert" id="cert"><div style="font-size:40px">🏆</div><b id="certN"></b><span>completed the School Store & Clubs Lab<br><span id="certD"></span></span><div style="margin-top:6px;font:800 13px Nunito;color:#8a5b00">📸 Show this to your teacher!</div></div></div>
+      <div class="box"><h3>🎓 Lab certificate</h3><div class="who" id="who"></div><div class="sync" id="sync"></div><div class="cert" id="cert"><div style="font-size:40px">🏆</div><b id="certN"></b><span>completed the School Store & Clubs Lab<br><span id="certC"></span> · <span id="certD"></span></span><div style="margin-top:6px;font:800 13px Nunito;color:#8a5b00">✅ Saved for your teacher</div></div></div>
       <div class="box"><h3>Tools</h3><div class="tools"><button id="demo">▶ Show me everything</button><button class="g" id="reset">↺ Start again</button></div></div>
     </div>
   </div>
 </div>
+<div class="gate hide" id="gate"><form class="gcard" id="gform" autocomplete="off">
+  <h2>🛒 Before you start</h2>
+  <p>Type your name and class. Your progress and your certificate are saved for your teacher.</p>
+  <label for="gName">Full name</label><input id="gName" maxlength="40" placeholder="e.g. Sara Ahmed" required>
+  <label for="gClass">Class / section</label><input id="gClass" maxlength="12" placeholder="e.g. 11A" required>
+  <div class="err" id="gErr"></div>
+  <button type="submit">Start the lab ▶</button>
+</form></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="config.js"></script>
+<script src="live.js"></script>
 <script src="fx.js"></script>
 <script src="lab.js"></script>
 <script>
   floaters(["🛒", "🎟️", "{ }", "🔑", "&", "|", "🐍", "✨"]);
-  let lab, celebrated = false;
-  const nm = document.getElementById('nm');
-  try { nm.value = localStorage.getItem('g10w10s2-lab-name') || ''; } catch (e) { }
+  /* ---- saving: sessions/<SESSION_KEY>-lab/state {round} · rounds/<round>/players/<id> ---- */
+  const LK = 'g10w10s2-lab-me', GAME = 'lab';
+  let me = null, ready = false, round = 1, lab, celebrated = false, helps = 0, lastSent = '', startedAt = Date.now();
+  try { me = JSON.parse(localStorage.getItem(LK) || 'null'); } catch (e) { }
+  const $ = (id) => document.getElementById(id);
+  const syncMsg = (t, c) => { $('sync').className = 'sync ' + (c || ''); $('sync').textContent = t; };
+  const fmtDate = () => new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  function showWho() {
+    $('who').innerHTML = me ? `${esc(me.name)}<small>Class ${esc(me.cls)} · <a id="notme">not you?</a></small>` : '';
+    const n = $('notme'); if (n) n.onclick = () => { if (confirm('Sign out and start as a different student?')) { try { localStorage.removeItem(LK); } catch (e) { } location.reload(); } };
+  }
+  function esc(t) { return String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function ref() { return LIVE.on && me ? LIVE.playerRef(GAME, round, me.id) : null; }
+  function save(force) {
+    if (!me || !lab || (LIVE.on && !ready)) return;
+    const t = lab.tasks(), done = t.filter((x) => x[1]).length, pct = Math.round(done / t.length * 100);
+    if (pct > (me.best || 0)) { me.best = pct; try { localStorage.setItem(LK, JSON.stringify(me)); } catch (e) { } }
+    const rec = { name: me.name, cls: me.cls, pct, best: me.best || 0, done, total: t.length, m: t.map((x) => x[1] ? 1 : 0).join(''), helps };
+    const key = JSON.stringify(rec); if (!force && key === lastSent) return; lastSent = key;
+    const r = ref(); if (!r) { syncMsg(LIVE.filled ? '⚠️ Not connected: your work is not being saved.' : '⚠️ Saving is off on this copy.', 'bad'); return; }
+    const up = Object.assign({}, rec, { updatedAt: LIVE.now() });
+    if (pct === 100 && !me.finished) { me.finished = true; up.finishedAt = LIVE.now(); try { localStorage.setItem(LK, JSON.stringify(me)); } catch (e) { } }
+    r.update(up).then(() => syncMsg('✓ Saved for your teacher', 'ok')).catch((e) => syncMsg('⚠️ Could not save: ' + e.message, 'bad'));
+  }
   const paint = () => {
     const t = lab.tasks(), d = t.filter((x) => x[1]).length, p = Math.round(d / t.length * 100);
-    document.getElementById('pct').textContent = p + '%'; document.getElementById('bar').style.width = p + '%';
-    document.getElementById('sc').innerHTML = t.map(([n, ok]) => `<div class="sc ${ok ? 'on' : ''}"><i>✓</i>${n}</div>`).join('');
-    const c = document.getElementById('cert'); const full = p === 100;
-    document.getElementById('certN').textContent = nm.value.trim() || 'You';
-    document.getElementById('certD').textContent = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    c.classList.toggle('show', full);
+    $('pct').textContent = p + '%'; $('bar').style.width = p + '%';
+    $('sc').innerHTML = t.map(([n, ok]) => `<div class="sc ${ok ? 'on' : ''}"><i>✓</i>${n}</div>`).join('');
+    const full = p === 100;
+    $('certN').textContent = me ? me.name : 'You'; $('certC').textContent = me ? 'Class ' + me.cls : ''; $('certD').textContent = fmtDate();
+    $('cert').classList.toggle('show', full);
     if (full && !celebrated) { celebrated = true; try { confetti(160); } catch (e) { } }
+    save();
   };
-  nm.addEventListener('input', () => { try { localStorage.setItem('g10w10s2-lab-name', nm.value); } catch (e) { } paint(); });
-  lab = mountLab(document.getElementById('sim'), Object.assign({ fs: 'clamp(13px, 1.25vw, 17px)', height: 'min(80vh, 760px)' }, window.LAB_OPTS || {}, { onChange: () => setTimeout(paint) }));
-  paint();
-  document.getElementById('demo').onclick = () => { lab.reset(); lab.demo(); };
-  document.getElementById('reset').onclick = () => { if (confirm('Start the lab again from the beginning?')) { lab.reset(); celebrated = false; paint(); } };
+  // count every "Show me" the student uses, so the teacher can see how much help was needed
+  $('sim').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b && /show/i.test(b.textContent)) { helps++; setTimeout(() => save(), 50); } }, true);
+  function begin() {
+    $('gate').classList.add('hide'); showWho();
+    lab = mountLab($('sim'), Object.assign({ fs: 'clamp(13px, 1.25vw, 17px)', height: 'min(80vh, 760px)' }, window.LAB_OPTS || {}, { onChange: () => setTimeout(paint) }));
+    if (LIVE.on) {
+      LIVE.stateRef(GAME).once('value').then((s) => {
+        const st = s.val() || {};
+        if (!st.round) LIVE.stateRef(GAME).update({ round: 1, missions: lab.tasks().map((x) => x[0]) });
+        else if (!st.missions) LIVE.stateRef(GAME).update({ missions: lab.tasks().map((x) => x[0]) });
+        round = st.round || 1;
+        if (me.round !== round) { me.round = round; me.finished = false; me.best = 0; try { localStorage.setItem(LK, JSON.stringify(me)); } catch (e) { } }
+        ready = true; const r = ref(); r.child('startedAt').once('value').then((v) => { if (!v.exists()) r.update({ startedAt: LIVE.now() }); save(true); });
+      }).catch((e) => syncMsg('⚠️ Could not connect: ' + e.message, 'bad'));
+    } else syncMsg(LIVE.error ? '⚠️ ' + LIVE.error : '⚠️ Saving is off on this copy.', 'bad');
+    paint();
+  }
+  $('gform').onsubmit = (e) => {
+    e.preventDefault();
+    const name = $('gName').value.trim().replace(/\s+/g, ' '), cls = $('gClass').value.trim().toUpperCase().replace(/\s+/g, '');
+    if (name.split(' ').length < 2) { $('gErr').textContent = 'Please type your first AND last name.'; return; }
+    if (!cls) { $('gErr').textContent = 'Please type your class.'; return; }
+    me = { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), name, cls };
+    try { localStorage.setItem(LK, JSON.stringify(me)); } catch (e) { }
+    begin();
+  };
+  if (me && me.id) begin(); else { $('gate').classList.remove('hide'); setTimeout(() => $('gName').focus(), 100); }
+  $('demo').onclick = () => { helps += 5; lab.reset(); lab.demo(); save(true); };
+  $('reset').onclick = () => { if (confirm('Start the lab again from the beginning?')) { lab.reset(); celebrated = false; paint(); } };
 </script>
 </body>
 </html>
